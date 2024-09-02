@@ -5,6 +5,7 @@
  */
 
 #define LOG_CATEGORY UCLASS_BOOTSTD
+#define LOG_DEBUG
 
 #include <common.h>
 #include <bootdev.h>
@@ -188,7 +189,7 @@ static int iter_incr(struct bootflow_iter *iter)
 	bool global;
 	int ret;
 
-	log_debug("entry: err=%d\n", iter->err);
+	log_debug("boot/bootflow.c:192 - entry: err=%d\n", iter->err);
 	global = iter->doing_global;
 
 	if (iter->err == BF_NO_MORE_DEVICES)
@@ -358,14 +359,14 @@ static int bootflow_check(struct bootflow_iter *iter, struct bootflow *bflow)
 
 	/* If we got a valid bootflow, return it */
 	if (!ret) {
-		log_debug("Bootdev '%s' part %d method '%s': Found bootflow\n",
+		log_debug("boot/bootflow.c:362 - Bootdev '%s' part %d method '%s': Found bootflow\n",
 			  dev->name, iter->part, iter->method->name);
 		return 0;
 	}
 
 	/* Unless there is nothing more to try, move to the next device */
 	if (ret != BF_NO_MORE_PARTS && ret != -ENOSYS) {
-		log_debug("Bootdev '%s' part %d method '%s': Error %d\n",
+		log_debug("boot/bootflow.c:369 - Bootdev '%s' part %d method '%s': Error %d\n",
 			  dev->name, iter->part, iter->method->name, ret);
 		/*
 		 * For 'all' we return all bootflows, even
@@ -412,7 +413,7 @@ int bootflow_scan_first(struct udevice *dev, const char *label,
 
 	ret = bootflow_check(iter, bflow);
 	if (ret) {
-		log_debug("check - ret=%d\n", ret);
+		log_debug("boot/bootflow.c:416 - check - ret=%d\n", ret);
 		if (ret != BF_NO_MORE_PARTS && ret != -ENOSYS) {
 			if (iter->flags & BOOTFLOWIF_ALL)
 				return log_msg_ret("all", ret);
@@ -432,13 +433,13 @@ int bootflow_scan_next(struct bootflow_iter *iter, struct bootflow *bflow)
 
 	do {
 		ret = iter_incr(iter);
-		log_debug("iter_incr: ret=%d\n", ret);
+		log_debug("boot/bootflow.c:436 - iter_incr: ret=%d\n", ret);
 		if (ret == BF_NO_MORE_DEVICES)
 			return log_msg_ret("done", ret);
 
 		if (!ret) {
 			ret = bootflow_check(iter, bflow);
-			log_debug("check - ret=%d\n", ret);
+			log_debug("boot/bootflow.c:442 - check - ret=%d\n", ret);
 			if (!ret)
 				return 0;
 			iter->err = ret;
@@ -569,7 +570,7 @@ int bootflow_iter_check_blk(const struct bootflow_iter *iter)
 	const struct udevice *media = dev_get_parent(iter->dev);
 	enum uclass_id id = device_get_uclass_id(media);
 
-	log_debug("uclass %d: %s\n", id, uclass_get_name(id));
+	log_debug("boot/bootflow.c:573 - uclass %d: %s\n", id, uclass_get_name(id));
 	if (id != UCLASS_ETH && id != UCLASS_BOOTSTD && id != UCLASS_QFW)
 		return 0;
 
@@ -581,7 +582,7 @@ int bootflow_iter_check_sf(const struct bootflow_iter *iter)
 	const struct udevice *media = dev_get_parent(iter->dev);
 	enum uclass_id id = device_get_uclass_id(media);
 
-	log_debug("uclass %d: %s\n", id, uclass_get_name(id));
+	log_debug("boot/bootflow.c:585 - uclass %d: %s\n", id, uclass_get_name(id));
 	if (id == UCLASS_SPI_FLASH)
 		return 0;
 
@@ -593,7 +594,7 @@ int bootflow_iter_check_net(const struct bootflow_iter *iter)
 	const struct udevice *media = dev_get_parent(iter->dev);
 	enum uclass_id id = device_get_uclass_id(media);
 
-	log_debug("uclass %d: %s\n", id, uclass_get_name(id));
+	log_debug("boot/bootflow.c:597 -  uclass %d: %s\n", id, uclass_get_name(id));
 	if (id == UCLASS_ETH)
 		return 0;
 
@@ -605,7 +606,7 @@ int bootflow_iter_check_system(const struct bootflow_iter *iter)
 	const struct udevice *media = dev_get_parent(iter->dev);
 	enum uclass_id id = device_get_uclass_id(media);
 
-	log_debug("uclass %d: %s\n", id, uclass_get_name(id));
+	log_debug("boot/bootflow.c - uclass %d: %s\n", id, uclass_get_name(id));
 	if (id == UCLASS_BOOTSTD)
 		return 0;
 

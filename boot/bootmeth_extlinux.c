@@ -7,6 +7,7 @@
  */
 
 #define LOG_CATEGORY UCLASS_BOOTSTD
+#define LOG_DEBUG
 
 #include <common.h>
 #include <bootdev.h>

@@ -10,6 +10,7 @@
  *   limits the maximum size of addressable storage to < 2 tebibytes
  */
 
+#define LOG_DEBUG
 #define LOG_CATEGORY LOGC_FS
 
 #include <common.h>
@@ -145,7 +146,7 @@ static int validate_gpt_header(gpt_header *gpt_h, lbaint_t lba,
 		return -1;
 	}
 
-	debug("GPT: first_usable_lba: %llX last_usable_lba: %llX last lba: "
+	debug("disk/part_efi.c:149 - GPT: first_usable_lba: %llX last_usable_lba: %llX last lba: "
 	      LBAF "\n", le64_to_cpu(gpt_h->first_usable_lba),
 	      le64_to_cpu(gpt_h->last_usable_lba), lastlba);
 
@@ -272,8 +273,10 @@ int part_get_info_efi(struct blk_desc *desc, int part,
 	}
 
 	/* This function validates AND fills in the GPT header and PTE */
-	if (find_valid_gpt(desc, gpt_head, &gpt_pte) != 1)
+	if (find_valid_gpt(desc, gpt_head, &gpt_pte) != 1){
+		log_debug("disk/part_efi.c:276 - Invalid GPT table\n");
 		return -EINVAL;
+	}
 
 	if (part > le32_to_cpu(gpt_head->num_partition_entries) ||
 	    !is_pte_valid(&gpt_pte[part - 1])) {
@@ -293,6 +296,7 @@ int part_get_info_efi(struct blk_desc *desc, int part,
 		 print_efiname(&gpt_pte[part - 1]));
 	strcpy((char *)info->type, "U-Boot");
 	info->bootable = get_bootable(&gpt_pte[part - 1]);
+	log_debug("disk/part_efi.c:296 - is_bootable %d - %d\n", part, info->bootable);
 	if (CONFIG_IS_ENABLED(PARTITION_UUIDS)) {
 		uuid_bin_to_str(gpt_pte[part - 1].unique_partition_guid.b,
 				(char *)disk_partition_uuid(info),
@@ -304,7 +308,7 @@ int part_get_info_efi(struct blk_desc *desc, int part,
 				UUID_STR_FORMAT_GUID);
 	}
 
-	log_debug("start 0x" LBAF ", size 0x" LBAF ", name %s\n", info->start,
+	log_debug("disk/part_efi.c:311 - start 0x" LBAF ", size 0x" LBAF ", name %s\n", info->start,
 		  info->size, info->name);
 
 	/* Remember to free pte */
@@ -1130,7 +1134,7 @@ static gpt_entry *alloc_read_gpt_entries(struct blk_desc *desc,
 	count = le32_to_cpu(pgpt_head->num_partition_entries) *
 		le32_to_cpu(pgpt_head->sizeof_partition_entry);
 
-	log_debug("count = %u * %u = %lu\n",
+	log_debug("disk/part_efi.c:1137 - count = %u * %u = %lu\n",
 		  (u32)le32_to_cpu(pgpt_head->num_partition_entries),
 		  (u32)le32_to_cpu(pgpt_head->sizeof_partition_entry),
 		  (ulong)count);

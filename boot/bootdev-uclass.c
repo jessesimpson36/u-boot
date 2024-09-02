@@ -4,6 +4,7 @@
  * Written by Simon Glass <sjg@chromium.org>
  */
 
+#define LOG_DEBUG
 #define LOG_CATEGORY UCLASS_BOOTSTD
 
 #include <common.h>
@@ -143,7 +144,7 @@ int bootdev_find_in_blk(struct udevice *dev, struct udevice *blk,
 	 * us whether there is valid media there
 	 */
 	ret = part_get_info(desc, iter->part, &info);
-	log_debug("part_get_info() returned %d\n", ret);
+	log_debug("boot/bootdev-uclass.c:147 - part_get_info() returned %d\n", ret);
 	if (!iter->part && ret == -ENOENT)
 		ret = 0;
 
@@ -173,12 +174,15 @@ int bootdev_find_in_blk(struct udevice *dev, struct udevice *blk,
 	iter->max_part = MAX_PART_PER_BOOTDEV;
 
 	if (iter->flags & BOOTFLOWIF_SINGLE_PARTITION) {
+		log_debug("boot/bootdev-uclass.c:177 - BOOTFLOWIF_SINGLE_PARTITION is true\n");
 		/* a particular partition was specified, scan it without checking */
 	} else if (!iter->part) {
+		log_debug("boot/bootdev-uclass.c:180 - !iter->part\n");
 		/* This is the whole disk, check if we have bootable partitions */
 		iter->first_bootable = part_get_bootable(desc);
 		log_debug("checking bootable=%d\n", iter->first_bootable);
 	} else if (allow_any_part) {
+		log_debug("boot/bootdev-uclass.c:185 - allow_any_part\n");
 		/*
 		 * allow any partition to be scanned, by skipping any checks
 		 * for filesystems or partition contents on this disk
@@ -187,8 +191,10 @@ int bootdev_find_in_blk(struct udevice *dev, struct udevice *blk,
 	/* if there are bootable partitions, scan only those */
 	} else if (iter->first_bootable >= 0 &&
 		   (iter->first_bootable ? !info.bootable : iter->part != 1)) {
+		log_debug("boot/bootdev-uclass.c:194 - first_bootable %d part %d \n", iter->first_bootable, iter->part);
 		return log_msg_ret("boot", -EINVAL);
 	} else {
+		log_debug("boot/bootdev-uclass.c:197 - elseblock\n");
 		ret = fs_set_blk_dev_with_part(desc, bflow->part);
 		bflow->state = BOOTFLOWST_PART;
 		if (ret)
@@ -217,14 +223,14 @@ void bootdev_list(bool probe)
 	int ret;
 	int i;
 
-	printf("Seq  Probed  Status  Uclass    Name\n");
-	printf("---  ------  ------  --------  ------------------\n");
+	printf("boot/bootdev-uclass.c:    - Seq  Probed  Status  Uclass    Name\n");
+	printf("boot/bootdev-uclass.c:      ---  ------  ------  --------  ------------------\n");
 	if (probe)
 		ret = uclass_first_device_check(UCLASS_BOOTDEV, &dev);
 	else
 		ret = uclass_find_first_device(UCLASS_BOOTDEV, &dev);
 	for (i = 0; dev; i++) {
-		printf("%3x   [ %c ]  %6s  %-9.9s %s\n", dev_seq(dev),
+		printf("boot/bootdev-uclass.c:233 - %3x   [ %c ]  %6s  %-9.9s %s\n", dev_seq(dev),
 		       device_active(dev) ? '+' : ' ',
 		       ret ? simple_itoa(-ret) : "OK",
 		       dev_get_uclass_name(dev_get_parent(dev)), dev->name);
@@ -548,7 +554,7 @@ static int default_get_bootflow(struct udevice *dev, struct bootflow_iter *iter,
 	int ret;
 
 	ret = bootdev_get_sibling_blk(dev, &blk);
-	log_debug("sibling_blk ret=%d, blk=%s\n", ret,
+	log_debug("boot/bootdev-uclass.c:557 - sibling_blk ret=%d, blk=%s\n", ret,
 		  ret ? "(none)" : blk->name);
 	/*
 	 * If there is no media, indicate that no more partitions should be
@@ -571,12 +577,15 @@ int bootdev_get_bootflow(struct udevice *dev, struct bootflow_iter *iter,
 {
 	const struct bootdev_ops *ops = bootdev_get_ops(dev);
 
-	log_debug("->get_bootflow %s,%x=%p\n", dev->name, iter->part,
+	log_debug("boot/bootdev-uclass.c:580 ->get_bootflow %s,%x=%p\n", dev->name, iter->part,
 		  ops->get_bootflow);
 	bootflow_init(bflow, dev, iter->method);
-	if (!ops->get_bootflow)
+	if (!ops->get_bootflow){
+		log_debug("boot/bootdev-uclass.c:584 - use default bootflow");
 		return default_get_bootflow(dev, iter, bflow);
+	}
 
+	log_debug("boot/bootdev-uclass.c:588 - use implementation-specific bootflow");
 	return ops->get_bootflow(dev, iter, bflow);
 }
 

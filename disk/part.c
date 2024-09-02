@@ -16,7 +16,7 @@
 #include <ubifs_uboot.h>
 #include <dm/uclass.h>
 
-#undef	PART_DEBUG
+#define PART_DEBUG
 
 #ifdef	PART_DEBUG
 #define	PRINTF(fmt,args...)	printf (fmt ,##args)
@@ -355,7 +355,7 @@ int part_get_info_by_type(struct blk_desc *desc, int part, int part_type,
 			return -ENOSYS;
 		}
 		if (drv->get_info(desc, part, info) == 0) {
-			PRINTF("## Valid %s partition found ##\n", drv->name);
+			PRINTF("disk/part.c:358 ## Valid %s partition found ##\n", drv->name);
 			return 0;
 		}
 	}
